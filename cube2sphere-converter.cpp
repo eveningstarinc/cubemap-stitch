@@ -2,6 +2,7 @@
 /* Standard Includes */
 #include <cstdlib>
 #include <cstring>
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <thread>
 

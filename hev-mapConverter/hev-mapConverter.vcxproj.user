@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommandArguments>convFromCube octahedral 36 uniform 0001_Left.png 0001_Right.png 0001_Back.png 0001_Front.png 0001_Bottom.png 0001_Top.png 1024 oct.png</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>..\..\..\Project Saru\tmp\Skybox</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>convFromCube octahedral2 36 uniform 0001_Left.png 0001_Right.png 0001_Back.png 0001_Front.png 0001_Bottom.png 0001_Top.png 1024 oct1.png oct2.png</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>..\..\..\Project Saru\tmp\Skybox</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>

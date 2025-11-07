@@ -5,6 +5,10 @@
 #include <cstdbool>
 #include <cmath>
 #include <ctime>
+#include <random>
+
+#define srand48(x) srand((int)(x))
+#define drand48() ((double)rand()/RAND_MAX)
 
 /* Header */
 #include "sampler.h"
