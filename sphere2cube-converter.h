@@ -18,7 +18,7 @@ class Sphere2CubeConverter
    *   Dest Vector Order: [left] [right] [back] [front] [floor] [ceiling] 
    */
   Sphere2CubeConverter(std::string source1, std::string source2, std::vector<std::string> dest, 
-		       int tex, int out_w, int out_h, int numSamples, bool type, bool &valid);
+		       int tex, int out_w, int out_h, int numSamples, int type, bool &valid);
   ~Sphere2CubeConverter();
   void convert();
   /* Fields */
@@ -27,7 +27,7 @@ class Sphere2CubeConverter
   byte* rgb_data1;
   byte* rgb_data2;
   byte* out_data[6];
-  bool samplingType; 
+  int samplingType; 
   int texture;
   std::string source1;
   std::string source2;
@@ -37,6 +37,7 @@ class Sphere2CubeConverter
   void getPointSpherical(int &i, int &j, Point3D ray);
   void getPointParabolic(int &i, int &j, bool &pos, Point3D ray);
   void getPointOctahedral(int &i, int &j, bool &pos, Point3D ray);
+  void getPointOctahedral2(int &i, int &j, Point3D ray);
   void readVals(byte *ptr, int &i, int &j, byte &r, byte &g, byte &b);
   void getRgbFromPoint(int facenum, Point2D p_in, byte &r, byte &g, byte &b);
   void populatePixel(int facenum, int i, int j, byte &r, byte &g, byte &b);

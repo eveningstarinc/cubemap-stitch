@@ -16,7 +16,7 @@
 using namespace std;
 
 Sphere2CubeConverter::Sphere2CubeConverter(string source1, string source2, vector<string> dest, int tex,
-					       int out_w, int out_h, int numSamples, bool type, bool &valid)
+					       int out_w, int out_h, int numSamples, int type, bool &valid)
 {
   /* Read in RGB Data */
   rgb_data1 = stbi_load(source1.c_str(), &input_width, &input_height, &input_bpp, 3);
@@ -113,6 +113,61 @@ void Sphere2CubeConverter::getPointOctahedral(int &i, int &j, bool &pos, Point3D
   j = (int) (((z + 1.0) * input_height)/2);
 }
 
+static double dot(Point3D v1, Point3D v2)
+{
+    return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+}
+
+void Sphere2CubeConverter::getPointOctahedral2(int &i, int &j, Point3D ray) 
+{
+  double xp, yp, zp;
+  xp = ray.x / (abs(ray.x) + abs(ray.y) + abs(ray.z));
+  yp = ray.y / (abs(ray.x) + abs(ray.y) + abs(ray.z));
+  zp = ray.z / (abs(ray.x) + abs(ray.y) + abs(ray.z));
+  double x, z;
+
+  Point3D octant = {
+      ray.x >= 0.0f ? 1.0f : -1.0f,
+      ray.y >= 0.0f ? 1.0f : -1.0f,
+      ray.z >= 0.0f ? 1.0f : -1.0f,
+  };
+
+  // Scale the vector so |x| + |y| + |z| = 1 (surface of octahedron).
+  float sum = dot(ray, octant);
+  Point3D octahedron = {
+      ray.x / sum,
+      ray.y / sum,
+      ray.z / sum,
+  };
+
+  // "Untuck" the corners using the same reflection across the diagonal as before.
+  // (A reflection is its own inverse transformation).
+  double result[2];
+  if (octahedron.z < 0) {
+      Point3D absolute = {
+          abs(octahedron.x),
+          abs(octahedron.y),
+          abs(octahedron.z),
+      };
+      result[0] = (octant.x * (1.0f - absolute.y));
+      result[1] = (octant.y * (1.0f - absolute.x));
+  }
+  else
+  {
+      result[0] = octahedron.x;
+      result[0] = octahedron.y;
+  }
+
+  for (int i = 0; i < 2; i++)
+  {
+      result[i] *= 0.5f;
+      result[i] += 0.5f;
+  }
+
+  i = (int) (result[0] * input_width);
+  j = (int) (result[1] * input_height);
+}
+
 void Sphere2CubeConverter::getPointParabolic(int &i, int &j, bool &pos, Point3D ray) 
 {
   double x, y;
@@ -143,11 +198,23 @@ void Sphere2CubeConverter::getRgbFromPoint(int facenum, Point2D p_in, byte &r, b
 {
   Point3D ray; int i, j; bool pos; 
   generateRay(ray, p_in, facenum);
-  if(texture == 0) getPointSpherical(i, j, ray);
-  if(texture == 1) getPointParabolic(i, j, pos, ray);
-  if(texture == 2) getPointOctahedral(i, j, pos, ray);
-  if(pos || texture == 0) readVals(rgb_data1, i, j, r, g, b);
-  else readVals(rgb_data2, i, j, r, g, b); 
+  if (texture == 0)
+  {
+      getPointSpherical(i, j, ray);
+	  readVals(rgb_data1, i, j, r, g, b);
+  }
+  else if (texture == 1 || texture == 2)
+  {
+	  if(texture == 1) getPointParabolic(i, j, pos, ray);
+	  if(texture == 2) getPointOctahedral(i, j, pos, ray);
+	  if (pos || texture == 0) readVals(rgb_data1, i, j, r, g, b);
+	  else readVals(rgb_data2, i, j, r, g, b);
+  }
+  else if (texture == 3)
+  {
+      getPointOctahedral2(i, j, ray);
+	  readVals(rgb_data1, i, j, r, g, b);
+  }
 }
 
 void Sphere2CubeConverter::populatePixel(int facenum, int i, int j, byte &r, byte &g, byte &b)

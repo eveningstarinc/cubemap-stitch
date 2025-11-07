@@ -53,6 +53,27 @@ void Cube2SphereConverter::generateRayOctahedron(Point3D &p_out, bool ypos, Poin
   p_out.x = p_out.x/mag; p_out.y = p_out.y/mag; p_out.z = p_out.z/mag;
 }
 
+void Cube2SphereConverter::generateRayOctahedron2(Point3D &p_out, Point2D p_in) 
+{
+  double x = (2 * p_in.x)/output_width - 1;
+  double y = (2 * p_in.y)/output_height - 1;
+
+  // "Lift" the middle of the square to +1 z, and let it fall off linearly
+    // to z = 0 along the Manhattan metric diamond (absolute.x + absolute.y == 1),
+    // and to z = -1 at the corners where position.x and .y are both = +-1.
+  p_out.x = x;
+  p_out.y = y;
+  Point2D absolute = { abs(x), abs(y) };
+  p_out.z = 1.0f - absolute.x - absolute.y;
+
+  // "Tuck in" the corners by reflecting the xy position along the line y = 1 - x
+  // (in quadrant 1), and its mirrored image in the other quadrants.
+  if (p_out.z < 0) {
+      p_out.x = (p_out.x >= 0.0 ? 1.0 : -1.0) * (1.0 - absolute.y);
+      p_out.y = (p_out.y >= 0.0 ? 1.0 : -1.0) * (1.0 - absolute.x);
+  }
+}
+
 void Cube2SphereConverter::generateRayParaboloid(Point3D &p_out, bool zpos, Point2D p_in)
 {
   p_out.x = p_in.x;
@@ -99,8 +120,10 @@ void Cube2SphereConverter::getRgbFromPoint(Point2D p_in, byte &r, byte &g, byte 
     double rad = sqrt((p_in.x * p_in.x) + (p_in.y * p_in.y));
     if(rad >= 1.01) {r = 255; g = 255; b = 255; return;}
     generateRayParaboloid(p, pos, p_in);
-  } else {
+  } else if(tex == 2) {
     generateRayOctahedron(p, pos, p_in);
+  } else if(tex == 3) {
+    generateRayOctahedron2(p, p_in);
   }
   
   /* Projection Algorithm */
@@ -171,7 +194,7 @@ void Cube2SphereConverter::convert(string outFile1, string outFile2, int xDim, i
 {
   /* Initialize */
   output_width = xDim; output_height = yDim; byte r, g, b; size_t offset;
-  byte *out_data_neg, *out_data_pos = (byte *) malloc(output_width * output_height * 3);
+  byte *out_data_neg = NULL, *out_data_pos = (byte *) malloc(output_width * output_height * 3);
   if(tex != 0) out_data_neg = (byte *) malloc(output_width * output_height * 3);
   
   /* Iterate over all output pixels */
@@ -182,7 +205,7 @@ void Cube2SphereConverter::convert(string outFile1, string outFile2, int xDim, i
       *(out_data_pos + offset + 0) = r;
       *(out_data_pos + offset + 1) = g;
       *(out_data_pos + offset + 2) = b;
-      if(tex != 0) {
+      if(tex != 0 && tex != 3) {
 	populatePixel(i, j, r, g, b, false, tex);
 	*(out_data_neg + offset + 0) = r;
 	*(out_data_neg + offset + 1) = g;
@@ -193,7 +216,7 @@ void Cube2SphereConverter::convert(string outFile1, string outFile2, int xDim, i
   
   /* Finally, write to the file */
   stbi_write_png(outFile1.c_str(), output_width, output_height, 3, out_data_pos, output_width*3);
-  if(tex != 0) stbi_write_png(outFile2.c_str(), output_width, output_height, 3, out_data_neg, output_width*3);
+  if(tex == 1 || tex == 2) stbi_write_png(outFile2.c_str(), output_width, output_height, 3, out_data_neg, output_width*3);
   free(out_data_pos); if(tex != 0) {free(out_data_neg);}
 }
 
